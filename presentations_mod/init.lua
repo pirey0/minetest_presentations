@@ -1,7 +1,3 @@
-
--- look at https://github.com/pyrollo/display_modpack/blob/master/display_api/API.md
-
-
  local ie = _G
  if minetest.request_insecure_environment then
 	 ie = minetest.request_insecure_environment()
@@ -19,7 +15,10 @@
 
 currentTexturePath = "img.png"
 
-local TestEntity = {
+displays = {}
+nextDisplayIndex =0
+
+local DisplayEntity = {
     initial_properties = {
         hp_max = 1,
         physical = true,
@@ -32,17 +31,43 @@ local TestEntity = {
         spritediv = {x = 1, y = 1},
         initial_sprite_basepos = {x = 0, y = 0},
     },
+
+    id = -1
 }
 
-function TestEntity:on_rightclick(clicker)
+function DisplayEntity:on_activate(staticdata, dtime_s)
+    
+    if staticdata ~= nil and staticdata ~= "" then
+        local data = minetest.parse_json(staticdata)
+        self.id = data.id
+    end
+    
+    if self.id <0 then
+        self.id = nextDisplayIndex
+        nextDisplayIndex = nextDisplayIndex + 1
+    end
+    
+    displays[self.id] = self
+    
+end
+
+
+function  DisplayEntity:get_staticdata()
+    return minetest.write_json({
+        id = self.id
+    })
+end
+
+
+function DisplayEntity:on_rightclick(clicker)
     self.object:set_properties ({
         textures = {currentTexturePath}
     })
-    minetest.show_formspec(clicker:get_player_name(), "presentation_test:testSpec", testSpec)
+    minetest.show_formspec(clicker:get_player_name(), Modname .. ":testSpec", testSpec)
 end
 
 minetest.register_on_player_receive_fields(function(player, formname, fields)
-    if formname ~= "presentation_test:testSpec" then
+    if formname ~= Modname .. ":testSpec" then
         return
     end
 
@@ -62,7 +87,7 @@ local string testSpec =
 "label[1,1;Please insert URL Here:]" ..
 "field[1,2;8,1;URL;URL;]"
 
-minetest.register_entity('presentation_test:testEntity', TestEntity)
+minetest.register_entity(Modname .. ':display', DisplayEntity)
 
 function downloadAndSaveTexture(url)
         minetest.chat_send_all("HTTP Request: " .. url)
