@@ -381,8 +381,14 @@ function download_and_save_texture(requester ,url, name)
                     io.output(file)
                     io.write(data)
                     io.close(file)
-                    minetest.dynamic_add_media(path)
-                    msg_player(requester, "Saved " .. name)
+                    if minetest.dynamic_add_media then
+                        minetest.dynamic_add_media(path)
+                        msg_player(requester, "Downloaded and dynamically added " .. name)
+                    else 
+                        msg_player(requester, "Downloaded " .. name .. ". Failed to add dynamically (dynamic_add_media). This feature requires 5.3+." ..
+                        "The image should be available on server restart.") 
+                    end
+
                     return true
                 end
             end
