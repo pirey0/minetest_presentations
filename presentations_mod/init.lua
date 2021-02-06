@@ -11,6 +11,7 @@
 
  Modname = minetest.get_current_modname()
  Modpath = minetest.get_modpath(Modname)
+ path_to_textures = Modpath .. DIR_DELIM .. "textures" .. DIR_DELIM
 
 
 displays = {}
@@ -39,11 +40,12 @@ local DisplayEntity = {
     size = 1.0,
     
     texture_names ={"img.png"},
-    current_index = 1
+    textures_index = 1,
+    textures_count = 1
 }
 
-function DisplayEntity:change_texture_to(texture)
-    self.texture_names = {texture};
+function DisplayEntity:change_textures_to(textures)
+    self.texture_names = textures;
     self.current_index = 1
     self:update_texture()
 end
@@ -59,7 +61,7 @@ function DisplayEntity:set_size(new_size)
 end
 
 function  DisplayEntity:update_texture()
-    local name = self.texture_names[self.current_index]
+    local name = self.texture_names[self.textures_index]
     self.object:set_properties({textures = {name}})
 end
 
@@ -85,7 +87,8 @@ function DisplayEntity:on_activate(staticdata, dtime_s)
         self.proportions = data.proportions
         self.size = data.size
         self.texture_names = data.texture_names
-        self.current_index = data.current_index
+        self.textures_index = data.textures_index
+        self.textures_count = data.textures_count
 
         self:update_size()
         self:update_texture()
@@ -103,6 +106,11 @@ function DisplayEntity:on_activate(staticdata, dtime_s)
     
 end
 
+function DisplayEntity:destroy_correctly()
+    minetest.add_item(self.object:get_pos(), display_item_name)
+    displays[self.id] = nil
+    self.object:remove()
+end
 
 function  DisplayEntity:get_staticdata()
     return minetest.write_json({
@@ -110,12 +118,26 @@ function  DisplayEntity:get_staticdata()
         proportions = self.proportions,
         size = self.size,
         texture_names = self.texture_names,
-        current_index = self.current_index
+        textures_index = self.textures_index,
+        textures_count = self.textures_count
     })
 end
 
-function DisplayEntity:on_punch(self, puncher, time_from_last_punch, tool_capabilities, dir, damage)
-    minetest.chat_send_all("OUCH!")
+function DisplayEntity:on_punch(puncher, time_from_last_punch, tool_capabilities, dir, damage)
+
+    -- allow breaking while using strong tool
+    if damage >= 5 then
+        msg_player(puncher, "Display destroyed from excessive damage of " .. damage)
+        self:destroy_correctly()
+        return true
+    end
+    
+    local index = self.textures_index + 1
+    if index > self.textures_count then
+        index = 1
+    end
+    self.textures_index = index
+    self:update_texture()
     return true
 end
 
@@ -124,8 +146,48 @@ function DisplayEntity:on_rightclick(clicker)
 end
 
 function DisplayEntity:show_formspec(clicker)
+
+    local height = 5.5 + self.textures_count*0.5
+
+    local testSpec = 
+    "formspec_version[4]" ..
+    "size[10,".. height .."]" ..
+    "achor[0,0]"..
+    "button[1,0.25; 2,.5;Destroy;Destroy;]"  ..
+    "label[6,0.5; ID: ".. self.id ..";]" ..
+    "button[1,1; 2,.5;MoveUp;Up;]" ..
+    "button[3,1; 2,.5;MoveDown;Down;]" ..
+    "button[5,1; 2,.5;MoveRight;Right;]" ..
+    "button[7,1; 2,.5;MoveLeft;Left;]" ..
+    "button[1,2; 2,.5;MoveForward;Forward;]" ..
+    "button[3,2; 2,.5;MoveBackward;Backward;]" ..
+    "button[5,2; 2,.5;RotateClock;Rotate Clockwise;]" ..
+    "button[7,2; 2.5,.5;RotateAnticlock;Rotate Anticlockwise;]" ..
+    
+    "button[1,3; 1,.5;ScalePlus;+;]" ..
+    "button[2,3; 1,.5;ScaleMinus;-;]"  ..
+    "button[4,3; 1,.5;R16_9;16:9;]"  ..
+    "button[5,3; 1,.5;R4_3;4:3;]"  ..
+    "button[6,3; 1,.5;R5_4;5:4;]"  ..
+    "button[7,3; 1,.5;R1_1;1:1;]"  ..
+    
+    "label[1,4.5;URLs:]" ..
+    "field[2,4.25;1,.5;Count;Count:;".. self.textures_count .. ";]" ..
+    "button[4,4.25;2,.5;UpdateImages; Save URLs]"
+
+    local y = 5
+    for i = 1, self.textures_count, 1 do
+        local default = self.texture_names[i]
+        if default == nil then
+            default = ""
+        end
+        testSpec = testSpec .."field[1,".. y ..";8,.5;URL".. i ..";;".. default ..";]" 
+        y = y + 0.5
+    end
+
     minetest.show_formspec(clicker:get_player_name(), display_formspec_name .. self.id, testSpec)
 end
+
 
 minetest.register_on_player_receive_fields(function(player, formname, fields)
     if not starts_with(formname, display_formspec_name) then
@@ -139,17 +201,8 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
         return
     end
 
-    if fields.URL and fields.URL ~= "" then
-
-        if ends_with(fields.URL, ".png") or ends_with(fields.URL, ".jpg") then
-            local resName = downloadAndSaveTexture(player, fields.URL)
-            if resName then
-                msg_player(player, "Saved " .. resName)
-                display:change_texture_to(resName)
-            end
-        else
-            msg_player(player, "Only .png and .jpg are supported. Invalid URL: " .. fields.URL )
-        end
+    if fields.Count then
+        display.textures_count = math.min(30, tonumber(fields.Count))
     end
 
     if fields.ScalePlus then
@@ -209,12 +262,44 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
     end
 
     if fields.Destroy then
-        minetest.add_item(display.object:get_pos(), display_item_name)
-        displays[display.id] = nil
-        display.object:remove()
+        display:destroy_correctly()
+    end
+    
+    if fields.UpdateImages then
+        local newTextures = {}
+        for i = 1, display.textures_count, 1 do
+            local current = "URL"..i;
+            local url = fields[current]
+            newTextures[i] = "img.png"
+
+            if url and url ~= "" then
+
+                if ends_with(url, ".png") or ends_with(url, ".jpg") then
+                    local name = url:match( "([^/]+)$")
+
+                    if file_exists(path_to_textures .. name) then
+                        newTextures[i] = name
+                        msg_player(player, "Image " .. i .. " already downloaded.")
+                    else
+                        local ok = download_and_save_texture(player, url, name)
+                        if ok then
+                            newTextures[i] = name
+                        else
+                            --error
+                        end
+                    end
+                else
+                    msg_player(player, "Only .png and .jpg are supported. Invalid URL: " .. i .. " -> " .. url)
+                end
+            end
+        end
+
+        display:change_textures_to(newTextures)
     end
 
+    
 end)
+
 
 function move_offset (display, x, y, z)  
     local pos = display.object:get_pos()
@@ -237,32 +322,14 @@ end
      minetest.chat_send_player(player:get_player_name(), msg)
  end
 
-local string testSpec = 
-"formspec_version[4]" ..
-"size[10,10]" ..
-"label[1,1;Please insert URL Here:]" ..
-"field[1,2;8,1;URL;URL;]" ..
-"button[1,4; 2,.5;MoveUp;Up;]" ..
-"button[3,4; 2,.5;MoveDown;Down;]" ..
-"button[5,4; 2,.5;MoveRight;Right;]" ..
-"button[7,4; 2,.5;MoveLeft;Left;]" ..
-"button[1,5; 2,.5;MoveForward;Forward;]" ..
-"button[3,5; 2,.5;MoveBackward;Backward;]" ..
-"button[5,5; 2,.5;RotateClock;Rotate Clockwise;]" ..
-"button[7,5; 2,.5;RotateAnticlock;Rotate Anticlockwise;]" ..
-
-"button[1,6; 1,1;ScalePlus;+;]" ..
-"button[3,6; 1,1;ScaleMinus;-;]"  ..
-"button[1,7; 1,1;R16_9;16:9;]"  ..
-"button[2,7; 1,1;R4_3;4:3;]"  ..
-"button[3,7; 1,1;R5_4;5:4;]"  ..
-"button[4,7; 1,1;R1_1;1:1;]"  ..
-
-"button[5,9; 2,1;Destroy;Destroy;]"  
+ function file_exists(name)
+    local f=io.open(name,"r")
+    if f~=nil then io.close(f) return true else return false end
+ end
 
 minetest.register_entity(display_entity_name, DisplayEntity)
 
-function downloadAndSaveTexture(requester ,url)
+function download_and_save_texture(requester ,url, name)
         msg_player(requester, "HTTP Request: " .. url)
 		local method = "GET"
 		local resp   = {}
@@ -273,21 +340,22 @@ function downloadAndSaveTexture(requester ,url)
             if resp then
                 local data = table.concat(resp);
                 if data then
-                    local name = url:match( "([^/]+)$" )
-                    local path =  Modpath .. DIR_DELIM .. "textures" .. DIR_DELIM .. name
+                    
+                    local path =  path_to_textures .. name
                     local file = io.open(path, "w+")
                     io.output(file)
                     io.write(data)
                     io.close(file)
                     minetest.dynamic_add_media(path)
-                    return name
+                    msg_player(requester, "Saved " .. name)
+                    return true
                 end
-                return nil
             end
         else
             msg_player(requester, "ERROR: " ..code)
-            return nil
         end
+
+        return false
 end
 
 
@@ -302,4 +370,17 @@ minetest.register_craftitem(display_item_name,{
         return itemstack
     end
 
+})
+
+minetest.register_chatcommand("delete_all_displays", {
+    privs = {},
+    func = function(name, param)
+    
+        for _, entity in ipairs(minetest.luaentities) do
+            if entity.proportions then
+                entity.object:remove()
+            end
+        end
+
+    end,
 })
