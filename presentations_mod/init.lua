@@ -9,19 +9,19 @@
  Http  = ie.require("socket.http")
  Ltn12 = ie.require("ltn12")
 
- Modname = minetest.get_current_modname()
- Modpath = minetest.get_modpath(Modname)
- path_to_textures = Modpath .. DIR_DELIM .. "textures" .. DIR_DELIM
+ modname = minetest.get_current_modname()
+ modpath = minetest.get_modpath(modname)
+ path_to_textures = modpath .. DIR_DELIM .. "textures" .. DIR_DELIM
 
 
 displays = {}
 nextDisplayIndex = 0
 
-display_formspec_name = Modname .. ":display_formspec_"
-display_entity_name = Modname .. ':display'
-display_item_name  = Modname .. ":display_item"
-display_remote_item_name = Modname .. ":display_remote_item"
-display_remote_item_formspec_name = Modname .. "display_remote_formspec_"
+display_formspec_name = modname .. ":display_formspec_"
+display_entity_name = modname .. ':display'
+display_item_name  = modname .. ":display_item"
+display_remote_item_name = modname .. ":display_remote_item"
+display_remote_item_formspec_name = modname .. "display_remote_formspec_"
 
 local DisplayEntity = {
     initial_properties = {
