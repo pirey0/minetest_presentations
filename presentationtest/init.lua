@@ -24,10 +24,10 @@ local TestEntity = {
         hp_max = 1,
         physical = true,
         collide_with_objects = false,
-        collisionbox = {-3, -2, -.1, 3, 2, .1},
+        collisionbox = {-.5, -.5, -.1, .5, .5, .1},
         visual = "mesh",
         mesh = "test.obj",
-        visual_size = {x = 6, y = 6},
+        visual_size = {x = 1, y = 1},
         textures = {"img.png"},
         spritediv = {x = 1, y = 1},
         initial_sprite_basepos = {x = 0, y = 0},
@@ -63,40 +63,6 @@ local string testSpec =
 "field[1,2;8,1;URL;URL;]"
 
 minetest.register_entity('presentation_test:testEntity', TestEntity)
-
-minetest.register_node('presentation_test:test', {
-	description = 'Test123',
-	drawtype = 'mesh',
-	mesh = 'test.obj',
-	tiles = {'img.png'},
-	inventory_image = 'img.png',
-	groups = {oddly_breakable_by_hand=2},
-	paramtype = 'light',
-	paramtype2 = 'facedir',
-	selection_box = {
-		type = 'fixed',
-		fixed = {-3, -2, -.1, 3, 2, .1}
-		},
-	collision_box = {
-		type = 'fixed',
-		fixed = {-3, -2, -.1, 3, 2, .1}
-		},
-
-    after_place_node = function(pos, placer)
-        local meta = minetest.get_meta(pos)
-        meta:set_string("formspec",testSpec)
-    end,
-	on_receive_fields = function(pos, formname, fields, player)
-		
-		if fields.URL then
-			downloadAndSaveTexture(fields.URL)
-		end
-
-        if fields.quit then
-            return
-        end
-    end
-})
 
 function downloadAndSaveTexture(url)
         minetest.chat_send_all("HTTP Request: " .. url)
