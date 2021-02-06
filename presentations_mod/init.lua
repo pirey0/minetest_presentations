@@ -17,6 +17,8 @@ displays = {}
 nextDisplayIndex = 0
 
 display_formspec_name = Modname .. ":display_formspec_"
+display_entity_name = Modname .. ':display'
+display_item_name  = Modname .. ":display_item"
 
 local DisplayEntity = {
     initial_properties = {
@@ -109,6 +111,10 @@ function  DisplayEntity:get_staticdata()
     })
 end
 
+function DisplayEntity:on_punch(self, puncher, time_from_last_punch, tool_capabilities, dir, damage)
+    minetest.chat_send_all("OUCH!")
+    return true
+end
 
 function DisplayEntity:on_rightclick(clicker)
     self:show_formspec(clicker)
@@ -195,7 +201,7 @@ local string testSpec =
 "button[3,5; 1,1;R5_4;5:4;]"  ..
 "button[4,5; 1,1;R1_1;1:1;]"  
 
-minetest.register_entity(Modname .. ':display', DisplayEntity)
+minetest.register_entity(display_entity_name, DisplayEntity)
 
 function downloadAndSaveTexture(requester ,url)
         msg_player(requester, "HTTP Request: " .. url)
@@ -224,3 +230,17 @@ function downloadAndSaveTexture(requester ,url)
             return nil
         end
 end
+
+
+minetest.register_craftitem(display_item_name,{
+    description = "Display",
+    inventory_image = "img.png",
+    on_use = function(itemstack, user, pointed_thing)
+        local pos = user:get_pos()
+        pos.y = pos.y + 1
+        minetest.add_entity(pos,  display_entity_name)
+        itemstack:take_item()
+        return itemstack
+    end
+
+})
