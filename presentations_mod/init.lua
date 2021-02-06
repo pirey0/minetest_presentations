@@ -13,10 +13,10 @@
  Modpath = minetest.get_modpath(Modname)
 
 
-currentTexturePath = "img.png"
-
 displays = {}
-nextDisplayIndex =0
+nextDisplayIndex = 0
+
+display_formspec_name = Modname .. ":display_formspec_"
 
 local DisplayEntity = {
     initial_properties = {
@@ -32,14 +32,21 @@ local DisplayEntity = {
         initial_sprite_basepos = {x = 0, y = 0},
     },
 
-    id = -1
+    id = -1,
+    texture_name = "img.png"
 }
+
+function DisplayEntity:change_texture_to(texture)
+    self.texture_name = texture;
+    self.object:set_properties ({textures = {texture}})
+end
 
 function DisplayEntity:on_activate(staticdata, dtime_s)
     
     if staticdata ~= nil and staticdata ~= "" then
         local data = minetest.parse_json(staticdata)
         self.id = data.id
+        self:change_texture_to(data.texture_name)
     end
     
     if self.id <0 then
@@ -54,32 +61,42 @@ end
 
 function  DisplayEntity:get_staticdata()
     return minetest.write_json({
-        id = self.id
+        id = self.id,
+        texture_name = self.texture_name
     })
 end
 
 
 function DisplayEntity:on_rightclick(clicker)
-    self.object:set_properties ({
-        textures = {currentTexturePath}
-    })
-    minetest.show_formspec(clicker:get_player_name(), Modname .. ":testSpec", testSpec)
+    
+
+    self:show_formspec(clicker)
+end
+
+function DisplayEntity:show_formspec(clicker)
+    minetest.show_formspec(clicker:get_player_name(), display_formspec_name .. self.id, testSpec)
 end
 
 minetest.register_on_player_receive_fields(function(player, formname, fields)
-    if formname ~= Modname .. ":testSpec" then
+    if not string.starts(formname, display_formspec_name) then
         return
     end
+
+    local id = tonumber(string.sub(formname, display_formspec_name:len()+1));
+    minetest.chat_send_all("Display formspec recieved: " .. id)
 
     if fields.URL then
         local resName = downloadAndSaveTexture(fields.URL)
         if resName then
             minetest.chat_send_all("Saved " .. resName)
-            currentTexturePath = resName
+            displays[id]:change_texture_to(resName)
             end
     end
 end)
 
+function string.starts(String,Start)
+    return string.sub(String,1,string.len(Start))==Start
+ end
 
 local string testSpec = 
 "formspec_version[4]" ..
