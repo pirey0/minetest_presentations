@@ -31,7 +31,7 @@ local DisplayEntity = {
         visual = "mesh",
         mesh = "test.obj",
         visual_size = {x = 1, y = 1},
-        textures = {"img.png"},
+        textures = {"default.jpg"},
         spritediv = {x = 1, y = 1},
         initial_sprite_basepos = {x = 0, y = 0},
     },
@@ -40,7 +40,7 @@ local DisplayEntity = {
     proportions = 1.0,
     size = 1.0,
     
-    texture_names ={"img.png"},
+    texture_names ={"default.jpg"},
     textures_index = 1,
     textures_count = 1
 }
@@ -280,7 +280,7 @@ function handle_display_form(player, formname, fields)
         for i = 1, display.textures_count, 1 do
             local current = "URL"..i;
             local url = fields[current]
-            newTextures[i] = "img.png"
+            newTextures[i] = "default.jpg"
 
             if url and url ~= "" then
                 local valid = ends_with_one_of(url, {".jpg", ".JPG", ".png", ".PNG"})
