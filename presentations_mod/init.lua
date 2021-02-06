@@ -13,7 +13,6 @@
  modpath = minetest.get_modpath(modname)
  path_to_textures = modpath .. DIR_DELIM .. "textures" .. DIR_DELIM
 
-
 displays = {}
 nextDisplayIndex = 0
 
@@ -506,17 +505,3 @@ function handle_display_remote_form(player, formname, fields)
         msg_player(player, "no display with ID:" .. id)
     end
 end
-
---not working
-minetest.register_chatcommand("delete_all_displays", {
-    privs = {},
-    func = function(name, param)
-    
-        for _, entity in ipairs(minetest.luaentities) do
-            if entity.proportions then
-                entity.object:remove()
-            end
-        end
-
-    end,
-})
