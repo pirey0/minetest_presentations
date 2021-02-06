@@ -92,6 +92,9 @@ function DisplayEntity:on_activate(staticdata, dtime_s)
     end
     
     if self.id <0 then
+        while displays[nextDisplayIndex] ~= nil do
+            nextDisplayIndex = nextDisplayIndex +1
+        end
         self.id = nextDisplayIndex
         nextDisplayIndex = nextDisplayIndex + 1
     end
@@ -149,14 +152,44 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
         end
     end
 
-    if fields.UP then
-        msg_player(player, "UP pressed")
+    if fields.ScalePlus then
         display:set_size(display.size+1)
     end
 
-    if fields.DOWN then
-        msg_player(player, "DOWN pressed")
-        display:set_size(display.size-1)
+    if fields.ScaleMinus then
+        display:set_size(math.max(display.size-1, 1))
+    end
+
+    if fields.MoveUp then
+        move_offset(display,0,1,0)
+    end
+
+    if fields.MoveDown then
+        move_offset(display, 0,-1,0)
+    end
+
+    if fields.MoveRight then
+        move_offset(display,1,0,0)
+    end
+
+    if fields.MoveLeft then
+        move_offset(display,-1,0,0)
+    end
+
+    if fields.MoveForward then
+        move_offset(display,0,0,1)
+    end
+
+    if fields.MoveBackward then
+        move_offset(display,0,0,-1)
+    end
+
+    if fields.RotateClock then
+        display.object:set_yaw(display.object:get_yaw() + math.pi/4)
+    end
+
+    if fields.RotateAnticlock then
+        display.object:set_yaw(display.object:get_yaw() - math.pi/4)
     end
 
     if fields.R16_9 then
@@ -174,7 +207,22 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
     if fields.R1_1 then
         display:set_proportions(1.0)
     end
+
+    if fields.Destroy then
+        display.object:remove()
+        --give item
+        --remove from table
+    end
+
 end)
+
+function move_offset (display, x, y, z)  
+    local pos = display.object:get_pos()
+    pos.x = pos.x + x
+    pos.y = pos.y + y
+    pos.z = pos.z + z
+    display.object:move_to(pos);
+end
 
 
  function starts_with(str, start)
@@ -194,12 +242,23 @@ local string testSpec =
 "size[10,10]" ..
 "label[1,1;Please insert URL Here:]" ..
 "field[1,2;8,1;URL;URL;]" ..
-"button[1,4; 1,1;UP;UP;]" ..
-"button[2,4; 1,1;DOWN;DOWN;]"  ..
-"button[1,5; 1,1;R16_9;16:9;]"  ..
-"button[2,5; 1,1;R4_3;4:3;]"  ..
-"button[3,5; 1,1;R5_4;5:4;]"  ..
-"button[4,5; 1,1;R1_1;1:1;]"  
+"button[1,4; 2,.5;MoveUp;Up;]" ..
+"button[3,4; 2,.5;MoveDown;Down;]" ..
+"button[5,4; 2,.5;MoveRight;Right;]" ..
+"button[7,4; 2,.5;MoveLeft;Left;]" ..
+"button[1,5; 2,.5;MoveForward;Forward;]" ..
+"button[3,5; 2,.5;MoveBackward;Backward;]" ..
+"button[5,5; 2,.5;RotateClock;Rotate Clockwise;]" ..
+"button[7,5; 2,.5;RotateAnticlock;Rotate Anticlockwise;]" ..
+
+"button[1,6; 1,1;ScalePlus;+;]" ..
+"button[3,6; 1,1;ScaleMinus;-;]"  ..
+"button[1,7; 1,1;R16_9;16:9;]"  ..
+"button[2,7; 1,1;R4_3;4:3;]"  ..
+"button[3,7; 1,1;R5_4;5:4;]"  ..
+"button[4,7; 1,1;R1_1;1:1;]"  ..
+
+"button[5,9; 2,1;Destroy;Destroy;]"  
 
 minetest.register_entity(display_entity_name, DisplayEntity)
 
