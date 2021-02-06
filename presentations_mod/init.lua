@@ -78,24 +78,38 @@ function DisplayEntity:show_formspec(clicker)
 end
 
 minetest.register_on_player_receive_fields(function(player, formname, fields)
-    if not string.starts(formname, display_formspec_name) then
+    if not starts_with(formname, display_formspec_name) then
         return
     end
 
     local id = tonumber(string.sub(formname, display_formspec_name:len()+1));
-    minetest.chat_send_all("Display formspec recieved: " .. id)
+    msg_player(player, "Display formspec recieved: " .. id)
 
     if fields.URL then
-        local resName = downloadAndSaveTexture(fields.URL)
-        if resName then
-            minetest.chat_send_all("Saved " .. resName)
-            displays[id]:change_texture_to(resName)
+
+        if ends_with(fields.URL, ".png") or ends_with(fields.URL, ".jpg") then
+            local resName = downloadAndSaveTexture(player, fields.URL)
+            if resName then
+                msg_player(player, "Saved " .. resName)
+                displays[id]:change_texture_to(resName)
             end
+        else
+            msg_player(player, "Only .png and .jpg are supported. Invalid URL: " .. fields.URL )
+        end
     end
 end)
 
-function string.starts(String,Start)
-    return string.sub(String,1,string.len(Start))==Start
+
+ function starts_with(str, start)
+    return str:sub(1, #start) == start
+ end
+ 
+ function ends_with(str, ending)
+    return ending == "" or str:sub(-#ending) == ending
+ end
+
+ function msg_player(player, msg)
+     minetest.chat_send_player(player:get_player_name(), msg)
  end
 
 local string testSpec = 
@@ -106,8 +120,8 @@ local string testSpec =
 
 minetest.register_entity(Modname .. ':display', DisplayEntity)
 
-function downloadAndSaveTexture(url)
-        minetest.chat_send_all("HTTP Request: " .. url)
+function downloadAndSaveTexture(requester ,url)
+        msg_player(requester, "HTTP Request: " .. url)
 		local method = "GET"
 		local resp   = {}
 
@@ -144,7 +158,7 @@ function downloadAndSaveTexture(url)
                 return nil
             end
         else
-            minetest.chat_send_all("ERROR: " ..code)
+            msg_player(requester, "ERROR: " ..code)
             return nil
         end
 end
