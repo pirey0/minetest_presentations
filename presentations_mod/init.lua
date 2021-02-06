@@ -273,9 +273,15 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
             newTextures[i] = "img.png"
 
             if url and url ~= "" then
+                local valid = ends_with_one_of(url, {".jpg", ".JPG", ".png", ".PNG"})
+                local fixSpelling = ends_with_one_of(url, {".JPG", ".PNG"})
 
-                if ends_with(url, ".png") or ends_with(url, ".jpg") then
+                if valid then
                     local name = url:match( "([^/]+)$")
+                    if fixSpelling then
+                        name = name:gsub(".JPG", ".jpg")
+                        name = name:gsub(".PNG", ".png")
+                    end
 
                     if file_exists(path_to_textures .. name) then
                         newTextures[i] = name
@@ -316,6 +322,19 @@ end
  
  function ends_with(str, ending)
     return ending == "" or str:sub(-#ending) == ending
+ end
+
+ function ends_with_one_of(str, endings)
+    if str == "" then
+        return true
+    end
+
+    for index, value in ipairs(endings) do
+        if str:sub(-#value) == value then
+            return true
+        end
+    end
+    return false
  end
 
  function msg_player(player, msg)
