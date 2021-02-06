@@ -33,27 +33,35 @@ local DisplayEntity = {
     },
 
     id = -1,
-    texture_name = "img.png",
     proportions = 1.0,
-    size = 1.0
+    size = 1.0,
+    
+    texture_names ={"img.png"},
+    current_index = 1
 }
 
 function DisplayEntity:change_texture_to(texture)
-    self.texture_name = texture;
-    self.object:set_properties ({textures = {texture}})
+    self.texture_names = {texture};
+    self.current_index = 1
+    self:update_texture()
 end
 
 function DisplayEntity:set_proportions(new_proportions)
     self.proportions = new_proportions
-    self:adapt_size()
+    self:update_size()
 end
 
 function DisplayEntity:set_size(new_size)
     self.size = new_size
-    self:adapt_size()
+    self:update_size()
 end
 
-function  DisplayEntity:adapt_size()
+function  DisplayEntity:update_texture()
+    local name = self.texture_names[self.current_index]
+    self.object:set_properties({textures = {name}})
+end
+
+function  DisplayEntity:update_size()
     
     local size_x = self.size;
     local size_y = self.size * self.proportions;
@@ -70,11 +78,15 @@ function DisplayEntity:on_activate(staticdata, dtime_s)
     
     if staticdata ~= nil and staticdata ~= "" then
         local data = minetest.parse_json(staticdata)
+
         self.id = data.id
         self.proportions = data.proportions
         self.size = data.size
-        self:change_texture_to(data.texture_name)
-        self:adapt_size()
+        self.texture_names = data.texture_names
+        self.current_index = data.current_index
+
+        self:update_size()
+        self:update_texture()
     end
     
     if self.id <0 then
@@ -90,9 +102,10 @@ end
 function  DisplayEntity:get_staticdata()
     return minetest.write_json({
         id = self.id,
-        texture_name = self.texture_name,
         proportions = self.proportions,
-        size = self.size
+        size = self.size,
+        texture_names = self.texture_names,
+        current_index = self.current_index
     })
 end
 
