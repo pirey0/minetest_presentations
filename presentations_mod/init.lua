@@ -209,9 +209,9 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
     end
 
     if fields.Destroy then
+        minetest.add_item(display.object:get_pos(), display_item_name)
+        displays[display.id] = nil
         display.object:remove()
-        --give item
-        --remove from table
     end
 
 end)
