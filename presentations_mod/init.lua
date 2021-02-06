@@ -20,6 +20,8 @@ nextDisplayIndex = 0
 display_formspec_name = Modname .. ":display_formspec_"
 display_entity_name = Modname .. ':display'
 display_item_name  = Modname .. ":display_item"
+display_remote_item_name = Modname .. ":display_remote_item"
+display_remote_item_formspec_name = Modname .. "display_remote_formspec_"
 
 local DisplayEntity = {
     initial_properties = {
@@ -123,6 +125,24 @@ function  DisplayEntity:get_staticdata()
     })
 end
 
+function  DisplayEntity:goto_next()
+    local index = self.textures_index + 1
+    self:goto_number(index)
+end
+
+function DisplayEntity:goto_previous()
+    local index = self.textures_index - 1
+    self:goto_number(index)
+end
+
+function DisplayEntity:goto_number(index)
+    if index > self.textures_count or index < 0 then
+        index = 1
+    end
+    self.textures_index = index
+    self:update_texture()
+end
+
 function DisplayEntity:on_punch(puncher, time_from_last_punch, tool_capabilities, dir, damage)
 
     -- allow breaking while using strong tool
@@ -132,12 +152,7 @@ function DisplayEntity:on_punch(puncher, time_from_last_punch, tool_capabilities
         return true
     end
     
-    local index = self.textures_index + 1
-    if index > self.textures_count then
-        index = 1
-    end
-    self.textures_index = index
-    self:update_texture()
+    self:goto_next()
     return true
 end
 
@@ -189,11 +204,7 @@ function DisplayEntity:show_formspec(clicker)
 end
 
 
-minetest.register_on_player_receive_fields(function(player, formname, fields)
-    if not starts_with(formname, display_formspec_name) then
-        return
-    end
-
+function handle_display_form(player, formname, fields)
     local id = tonumber(string.sub(formname, display_formspec_name:len()+1));
     local display = displays[id]
     if not display then
@@ -302,10 +313,15 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 
         display:change_textures_to(newTextures)
     end
+end
 
-    
+minetest.register_on_player_receive_fields(function(player, formname, fields)
+    if starts_with(formname, display_formspec_name) then
+        handle_display_form(player, formname, fields)
+    elseif starts_with(formname, display_remote_item_formspec_name) then
+        handle_display_remote_form(player, formname, fields)
+    end
 end)
-
 
 function move_offset (display, x, y, z)  
     local pos = display.object:get_pos()
@@ -380,7 +396,7 @@ end
 
 minetest.register_craftitem(display_item_name,{
     description = "Display",
-    inventory_image = "img.png",
+    inventory_image = "display_item.png",
     on_use = function(itemstack, user, pointed_thing)
         local pos = user:get_pos()
         pos.y = pos.y + 1
@@ -388,9 +404,104 @@ minetest.register_craftitem(display_item_name,{
         itemstack:take_item()
         return itemstack
     end
-
 })
 
+
+minetest.register_craftitem(display_remote_item_name, {
+    description = "Display Remote",
+    inventory_image = "display_remote_item.png",
+    on_use = function (itemstack, user, pointed_thing)
+        local meta = itemstack:get_meta()
+
+        if pointed_thing.type == "object" then
+        
+            if pointed_thing.ref.get_luaentity then
+                local entity = pointed_thing.ref:get_luaentity()
+                if entity.id then
+                    meta:set_int("display_id", entity.id)
+                    msg_player(user, "[Display Remote] Bound to display with ID " .. entity.id)
+                end
+            end
+        else
+            local id = meta:get_int("display_id")
+            if id >0 and displays[id] ~= nil then
+                minetest.show_formspec(user:get_player_name(), display_remote_item_formspec_name .. id, get_remote_formspec(id))
+            end
+
+        end
+
+        return itemstack
+    end
+    
+})
+
+function get_remote_formspec(id)
+    
+    local formspec = ""
+    
+    if id < 0 or displays[id] == nil then 
+       formspec = "formspec_version[4]" ..
+       "size[5,5]" ..
+       "achor[0,0]" ..
+    "label[1,1; Bound to no display, leftclick on a display to connect;]" 
+    else
+        local display = displays[id]
+        local sizeY = 5.5 + math.floor(display.textures_count/5) * 0.5
+
+        formspec = "formspec_version[4]" ..
+        "size[5,".. sizeY .."]" ..
+        "achor[0,0]" ..
+        "label[1,1; Bound to display #".. id.." ] " ..
+        "label[1,2; Currently: " .. display.textures_index .. "/" .. display.textures_count .."]" ..
+        "button[1,3;1,1;Left;<-;]" ..
+        "button[3,3;1,1;Right;->;]"
+
+        for i = 1, display.textures_count, 1 do
+            local igrid = i-1
+            local x = (igrid % 5)
+            local y = 4.5 + math.floor(igrid/5) * 0.5
+            formspec = formspec ..
+            "button["..x .. "," .. y .. ";1,.5;goto_" .. i .. ";" .. i .. ";]"
+        end
+
+        --current slide, next / previous buttons
+        -- buttons for each slide
+    end
+    return formspec
+end
+
+function handle_display_remote_form(player, formname, fields)
+    local id = tonumber(string.sub(formname, display_remote_item_formspec_name:len()+1))
+    msg_player(player, "Received form ID:" .. id)
+    local display = displays[id]
+
+    if display then
+        if fields.Right then
+            msg_player(player, "Pressed right")
+            display:goto_next()
+
+
+        elseif fields.Left then
+            display:goto_previous()
+            msg_player(player, "Pressed left")
+
+        else
+
+            for i = 1, display.textures_count, 1 do
+                if fields["goto_"..i] then
+                    display:goto_number(i)
+                    msg_player(player,"pressed " ..i)
+                    return
+                end
+            end
+
+        end
+    else
+        msg_player(player, "no display with ID:" .. id)
+    end
+end
+
+--not working
 minetest.register_chatcommand("delete_all_displays", {
     privs = {},
     func = function(name, param)
