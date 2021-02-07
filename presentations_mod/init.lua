@@ -10,6 +10,10 @@ display_item_name  = modname .. ":display_item"
 display_remote_item_name = modname .. ":display_remote_item"
 display_remote_item_formspec_name = modname .. "display_remote_formspec_"
 
+display_max_size = 20
+display_min_size = 1
+display_max_textures = 30
+
 displays = {}
 nextDisplayIndex = 0
 insecure_environment = nil
@@ -234,16 +238,16 @@ function handle_display_form(player, formname, fields)
     if fields.Count then
         local number = tonumber(fields.Count)
         if number then
-        display.textures_count = math.min(30, number)
+        display.textures_count = math.min(display_max_textures, number)
         end
     end
 
     if fields.ScalePlus then
-        display:set_size(display.size+1)
+        display:set_size(math.min(display.size+1, display_max_size))
     end
 
     if fields.ScaleMinus then
-        display:set_size(math.max(display.size-1, 1))
+        display:set_size(math.max(display.size-1, display_min_size))
     end
 
     if fields.MoveUp then
