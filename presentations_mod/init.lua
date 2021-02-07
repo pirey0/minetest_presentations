@@ -85,10 +85,19 @@ function  DisplayEntity:update_size()
     local half_x = size_x * 0.5
     local half_y = size_y * 0.5
 
-    self.object:set_properties({
-        visual_size = {x = size_x, y = size_y},
-        collisionbox = {-half_x, -half_y, -.1, half_x, half_y, .1}
-    })
+    local yaw = self.object:get_yaw()
+
+    if yaw == 0 then
+        self.object:set_properties({
+            visual_size = {x = size_x, y = size_y},
+            collisionbox = {-half_x, -half_y, -.1, half_x, half_y, .1}
+        })
+    else 
+        self.object:set_properties({
+            visual_size = {x = size_x, y = size_y},
+            collisionbox = {-.1, -half_y, -half_x, .1, half_y, half_x}
+        })
+    end
 end
 
 function DisplayEntity:on_activate(staticdata, dtime_s)
@@ -187,8 +196,7 @@ function DisplayEntity:show_formspec(clicker)
     "button[7,1; 2,.5;MoveLeft;Left;]" ..
     "button[1,2; 2,.5;MoveForward;Forward;]" ..
     "button[3,2; 2,.5;MoveBackward;Backward;]" ..
-    "button[5,2; 2,.5;RotateClock;Rotate Clockwise;]" ..
-    "button[7,2; 2.5,.5;RotateAnticlock;Rotate Anticlockwise;]" ..
+    "button[5,2; 2,.5;Rotate;Rotate;]" ..
     
     "button[1,3; 1,.5;ScalePlus;+;]" ..
     "button[2,3; 1,.5;ScaleMinus;-;]"  ..
@@ -262,12 +270,15 @@ function handle_display_form(player, formname, fields)
         move_offset(display,0,0,-1)
     end
 
-    if fields.RotateClock then
-        display.object:set_yaw(display.object:get_yaw() + math.pi/4)
-    end
+    if fields.Rotate then
+        local yaw = display.object:get_yaw()
+        if yaw == 0 then
+            display.object:set_yaw(math.pi/2)
+        else
+            display.object:set_yaw(0)
+        end
 
-    if fields.RotateAnticlock then
-        display.object:set_yaw(display.object:get_yaw() - math.pi/4)
+        display:update_size()
     end
 
     if fields.R16_9 then
