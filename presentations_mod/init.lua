@@ -41,7 +41,7 @@ local DisplayEntity = {
         collide_with_objects = false,
         collisionbox = {-.5, -.5, -.1, .5, .5, .1},
         visual = "mesh",
-        mesh = "test.obj",
+        mesh = "display.obj",
         visual_size = {x = 1, y = 1},
         textures = {"default.jpg"},
         spritediv = {x = 1, y = 1},
