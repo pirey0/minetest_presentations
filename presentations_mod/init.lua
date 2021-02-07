@@ -1,26 +1,38 @@
- local ie = _G
- if minetest.request_insecure_environment then
-	 ie = minetest.request_insecure_environment()
-	 if not ie then
-		 error("Insecure environment required!")
-	 end
- end
+--#region GLOBAL VARIABLES
 
- Http  = ie.require("socket.http")
- Ltn12 = ie.require("ltn12")
-
- modname = minetest.get_current_modname()
- modpath = minetest.get_modpath(modname)
- path_to_textures = modpath .. DIR_DELIM .. "textures" .. DIR_DELIM
-
-displays = {}
-nextDisplayIndex = 0
+modname = minetest.get_current_modname()
+modpath = minetest.get_modpath(modname)
+path_to_textures = modpath .. DIR_DELIM .. "textures" .. DIR_DELIM
 
 display_formspec_name = modname .. ":display_formspec_"
 display_entity_name = modname .. ':display'
 display_item_name  = modname .. ":display_item"
 display_remote_item_name = modname .. ":display_remote_item"
 display_remote_item_formspec_name = modname .. "display_remote_formspec_"
+
+displays = {}
+nextDisplayIndex = 0
+insecure_environment = nil
+--#endregion GLOBAL VARIABLES
+
+function  print_warn(msg)
+    print('\27[93m'..msg ..'\27[0m')
+end
+
+if minetest.request_insecure_environment then
+	 insecure_environment = minetest.request_insecure_environment()
+	 if not insecure_environment then
+        print_warn("[WARNING] Presentation requires an insecure environment to download textures. Add 'secure.trusted_mods = " .. modname .. "' to the minetest.conf to enable this feature.")
+     else
+        --https://forum.minetest.net/viewtopic.php?t=20802
+        old_require = require	
+        require = insecure_environment.require		
+        Http  = require("socket.http")
+        Ltn12 = require("ltn12")
+        require = old_require 
+     end
+end
+
 
 local DisplayEntity = {
     initial_properties = {
@@ -212,7 +224,10 @@ function handle_display_form(player, formname, fields)
     end
 
     if fields.Count then
-        display.textures_count = math.min(30, tonumber(fields.Count))
+        local number = tonumber(fields.Count)
+        if number then
+        display.textures_count = math.min(30, number)
+        end
     end
 
     if fields.ScalePlus then
@@ -361,9 +376,17 @@ end
     if f~=nil then io.close(f) return true else return false end
  end
 
+
+
 minetest.register_entity(display_entity_name, DisplayEntity)
 
 function download_and_save_texture(requester ,url, name)
+
+        if not Http or not Ltn12 or not insecure_environment then
+            msg_player(requester, "[ERROR] Unable to make http request. (" .. modname .. " requires insecure environment permissions to download textures." )
+            return false
+        end
+
         msg_player(requester, "HTTP Request: " .. url)
 		local method = "GET"
 		local resp   = {}
@@ -376,15 +399,15 @@ function download_and_save_texture(requester ,url, name)
                 if data then
                     
                     local path =  path_to_textures .. name
-                    local file = io.open(path, "w+")
-                    io.output(file)
-                    io.write(data)
-                    io.close(file)
+                    local file = insecure_environment.io.open(path, "w+")
+                    insecure_environment.io.output(file)
+                    insecure_environment.io.write(data)
+                    insecure_environment.io.close(file)
                     if minetest.dynamic_add_media then
                         minetest.dynamic_add_media(path)
                         msg_player(requester, "Downloaded and dynamically added " .. name)
                     else 
-                        msg_player(requester, "Downloaded " .. name .. ". Failed to add dynamically (dynamic_add_media). This feature requires 5.3+." ..
+                        msg_player(requester, "Downloaded " .. name .. ". [WARNING] Failed to add dynamically (dynamic_add_media). This feature requires 5.3.0." ..
                         "The image should be available on server restart.") 
                     end
 
@@ -505,3 +528,5 @@ function handle_display_remote_form(player, formname, fields)
         msg_player(player, "no display with ID:" .. id)
     end
 end
+
+print("[OK] Presentations")
