@@ -10,7 +10,7 @@ display_item_name  = modname .. ":display_item"
 display_remote_item_name = modname .. ":display_remote_item"
 display_remote_item_formspec_name = modname .. "display_remote_formspec_"
 
-display_max_size = 20
+display_max_size = 50
 display_min_size = 1
 display_max_textures = 30
 
@@ -37,6 +37,9 @@ if minetest.request_insecure_environment then
      end
 end
 
+minetest.register_privilege("presentations", {
+    description = "Can use and edit presentation displays"
+})
 
 local DisplayEntity = {
     initial_properties = {
@@ -167,7 +170,16 @@ function DisplayEntity:goto_number(index)
     self:update_texture()
 end
 
+function player_lacks_privilage(player)
+     return not minetest.check_player_privs(player, { presentations=true }) 
+end
+
 function DisplayEntity:on_punch(puncher, time_from_last_punch, tool_capabilities, dir, damage)
+
+    if player_lacks_privilage(puncher) then
+        msg_player(puncher, "You need the 'presentations' privilage to edit displays.")
+        return true
+    end
 
     -- allow breaking while using strong tool
     if damage >= 5 then
@@ -181,6 +193,11 @@ function DisplayEntity:on_punch(puncher, time_from_last_punch, tool_capabilities
 end
 
 function DisplayEntity:on_rightclick(clicker)
+    if player_lacks_privilage(clicker) then
+        msg_player(clicker, "You need the 'presentations' privilage to edit displays.")
+        return 
+    end
+
     self:show_formspec(clicker)
 end
 
@@ -515,7 +532,7 @@ end
 
 function handle_display_remote_form(player, formname, fields)
     local id = tonumber(string.sub(formname, display_remote_item_formspec_name:len()+1))
-    msg_player(player, "Received form ID:" .. id)
+    --msg_player(player, "Received form ID:" .. id)
     local display = displays[id]
 
     if display then
@@ -543,5 +560,7 @@ function handle_display_remote_form(player, formname, fields)
         msg_player(player, "no display with ID:" .. id)
     end
 end
+
+
 
 print("[OK] Presentations")
