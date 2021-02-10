@@ -182,7 +182,8 @@ function DisplayEntity:on_punch(puncher, time_from_last_punch, tool_capabilities
     end
 
     -- allow breaking while using strong tool
-    if damage >= 5 then
+    -- changed to 15 because Creative players automatically deal 10 damage.. TODO: Remove or rework
+    if damage >= 15 then
         msg_player(puncher, "Display destroyed from excessive damage of " .. damage)
         self:destroy_correctly()
         return true
@@ -439,7 +440,7 @@ function download_and_save_texture(requester ,url, name)
                         minetest.dynamic_add_media(path)
                         msg_player(requester, "Downloaded and dynamically added " .. name)
                     else 
-                        msg_player(requester, "Downloaded " .. name .. ". [WARNING] Failed to add dynamically (dynamic_add_media). This feature requires 5.3.0." ..
+                        msg_player(requester, "Downloaded " .. name .. ". [WARNING] Failed to add dynamically (dynamic_add_media). This feature requires 5.3.0 or newer." ..
                         "The image should be available on server restart.") 
                     end
 
@@ -473,8 +474,10 @@ minetest.register_craftitem(display_remote_item_name, {
     on_use = function (itemstack, user, pointed_thing)
         local meta = itemstack:get_meta()
 
+    if pointed_thing then
         if pointed_thing.type == "object" then
         
+            if pointed_thing.ref then
             if pointed_thing.ref.get_luaentity then
                 local entity = pointed_thing.ref:get_luaentity()
                 if entity.id then
@@ -489,6 +492,8 @@ minetest.register_craftitem(display_remote_item_name, {
             end
 
         end
+        end
+    end
 
         return itemstack
     end
