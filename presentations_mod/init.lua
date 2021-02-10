@@ -480,18 +480,18 @@ minetest.register_craftitem(display_remote_item_name, {
             if pointed_thing.ref then
             if pointed_thing.ref.get_luaentity then
                 local entity = pointed_thing.ref:get_luaentity()
-                if entity.id then
+                if entity then
                     meta:set_int("display_id", entity.id)
                     msg_player(user, "[Display Remote] Bound to display with ID " .. entity.id)
+                    return itemstack
                 end
-            end
-        else
-            local id = meta:get_int("display_id")
-            if id >0 and displays[id] ~= nil then
-                minetest.show_formspec(user:get_player_name(), display_remote_item_formspec_name .. id, get_remote_formspec(id))
-            end
-
         end
+        end
+        end
+        
+        local id = meta:get_int("display_id")
+        if id >= 0 and displays[id] ~= nil then
+            minetest.show_formspec(user:get_player_name(), display_remote_item_formspec_name .. id, get_remote_formspec(id))
         end
     end
 
