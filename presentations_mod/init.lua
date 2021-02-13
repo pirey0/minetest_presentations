@@ -136,7 +136,8 @@ function DisplayEntity:on_activate(staticdata, dtime_s)
 end
 
 function DisplayEntity:destroy_correctly()
-    minetest.add_item(self.object:get_pos(), display_item_name)
+    --Removed drop as it is bothersome in creative mode
+    --minetest.add_item(self.object:get_pos(), display_item_name)
     displays[self.id] = nil
     self.object:remove()
 end
@@ -210,7 +211,7 @@ function DisplayEntity:show_formspec(clicker)
     "formspec_version[4]" ..
     "size[10,".. height .."]" ..
     "achor[0,0]"..
-    "button[1,0.25; 2,.5;Destroy;Destroy;]"  ..
+    "button_exit[1,0.25; 2,.5;Destroy;Destroy;]"  ..
     "label[6,0.5; ID: ".. self.id ..";]" ..
     "button[1,1; 2,.5;MoveUp;Up;]" ..
     "button[3,1; 2,.5;MoveDown;Down;]" ..
@@ -462,7 +463,9 @@ minetest.register_craftitem(display_item_name,{
         local pos = user:get_pos()
         pos.y = pos.y + 1
         minetest.add_entity(pos,  display_entity_name)
-        itemstack:take_item()
+        
+        --Displays are not consumed as this is meant as a creative mode only tool
+        --itemstack:take_item()
         return itemstack
     end
 })
