@@ -475,7 +475,7 @@ function download_and_save_texture(requester ,url, name)
         end
 
         if size > max_download_length then
-            msg_player(requester, "[ERROR] filesize of " .. size .." bytes exceeds max size of " + max_download_length "bytes")
+            msg_player(requester, "[ERROR] filesize of " .. tostring(size) .." bytes exceeds max size of " .. tostring(max_download_length) .. " bytes")
             return false
         end
 
