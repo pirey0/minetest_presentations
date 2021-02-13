@@ -640,6 +640,21 @@ function handle_display_remote_form(player, formname, fields)
     end
 end
 
+minetest.register_chatcommand("log_presentation_textures", {
+    privs = {
+        presentations = true,
+    },
+    func = function(name, param)
+        if not insecure_environment then
+        return false
+        end
+
+        local msg = "DOWNLOADED TEXTURES:"
+        msg = msg.. "NOT IMPLEMENTED YET"
+        return true, msg
+    end
+})
+
 
 
 print("[OK] Presentations")
