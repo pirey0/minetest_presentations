@@ -62,12 +62,13 @@ local DisplayEntity = {
     proportions_x = 1.0,
     proportions_y = 1.0,
     size = 1.0,
+    allow_changing = false,
     
     texture_names ={"default.jpg"},
     textures_index = 1,
     textures_count = 1,
+    downloaded_textures = {}
 
-    allow_changing = false
 }
 
 function DisplayEntity:change_textures_to(textures)
@@ -127,6 +128,7 @@ function DisplayEntity:on_activate(staticdata, dtime_s)
         self.textures_index = data.textures_index
         self.textures_count = data.textures_count
         self.allow_changing = data.allow_changing
+        self.downloaded_textures = data.downloaded_textures
 
         self:update_size()
         self:update_texture()
@@ -151,8 +153,17 @@ function DisplayEntity:destroy_correctly()
     self.object:remove()
 end
 
-function DisplayEntity:destroy_correctly_and_cleanup()
+function DisplayEntity:destroy_correctly_and_cleanup(calling_player)
     
+    if insecure_environment then
+        for key, value in pairs(self.downloaded_textures) do
+            if file_exists(path_to_textures .. value) then
+                insecure_environment.os.remove(path_to_textures .. value)
+                msg_player(calling_player, "Removing: " .. value)
+            end
+        end
+    end
+
     --add cleanup
     self:destroy_correctly()
 end
@@ -166,7 +177,8 @@ function  DisplayEntity:get_staticdata()
         texture_names = self.texture_names,
         textures_index = self.textures_index,
         textures_count = self.textures_count,
-        allow_changing = self.allow_changing
+        allow_changing = self.allow_changing,
+        downloaded_textures = self.downloaded_textures,
     })
 end
 
@@ -225,7 +237,7 @@ function DisplayEntity:show_formspec(clicker)
     "label[1,0.5; ID: ".. self.id ..";]" ..
     "button_exit[5,0.25; 1.5,.5;Destroy;Destroy;]"  ..
     "button_exit[6.5,0.25; 2.5,.5;DestroyAndCleanup;Destroy And Cleanup;]"  ..
-
+    "tooltip[DestroyAndCleanup; Destroys the display and deletes all the images downloaded through it;#000000;#ffffff]"..
     "label[1,1.25; Move;]" ..
     "button[1,1.5; 1,0.5;MoveRight;X+;]" ..
     "button[2,1.5; 1,0.5;MoveUp;Y+;]" ..
@@ -357,7 +369,7 @@ function handle_display_form(player, formname, fields)
     end
 
     if fields.DestroyAndCleanup then
-        display:destroy_correctly_and_cleanup()
+        display:destroy_correctly_and_cleanup(player)
     end
     
     if fields.UpdateImages then
@@ -368,7 +380,7 @@ function handle_display_form(player, formname, fields)
             newTextures[i] = "default.jpg"
 
             if url and url ~= "" then
-                local valid = ends_with_one_of(url, {".jpg", ".JPG", ".png", ".PNG"})
+                local valid = ends_with_one_of(url, {".jpg", ".jpeg", ".JPG", ".png", ".PNG"})
                 local fixSpelling = ends_with_one_of(url, {".JPG", ".PNG"})
 
                 if valid then
@@ -385,6 +397,7 @@ function handle_display_form(player, formname, fields)
                         local ok = download_and_save_texture(player, url, name)
                         if ok then
                             newTextures[i] = name
+                            table.insert(display.downloaded_textures,name)
                         else
                             --error
                         end
@@ -503,6 +516,7 @@ function download_and_save_texture(requester ,url, name)
                         msg_player(requester, "Downloaded " .. name .. ". [WARNING] Failed to add dynamically (dynamic_add_media). This feature requires 5.3.0 or newer." ..
                         "The image should be available on server restart.") 
                     end
+                    
                     return true
                 end
             end
