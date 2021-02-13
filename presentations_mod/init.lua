@@ -191,9 +191,11 @@ end
 
 function DisplayEntity:on_punch(puncher, time_from_last_punch, tool_capabilities, dir, damage)
 
-    if not self.allow_changing and player_lacks_privilage(puncher) then
-        msg_player(puncher, "Can only change this display with the 'presentations' privilage.")
-        return true
+    if not self.allow_changing then
+            if player_lacks_privilage(puncher) then
+            msg_player(puncher, "Can only change this display with the 'presentations' privilage.")
+            return true
+        end
     end
     
     self:goto_next()
@@ -269,8 +271,8 @@ function handle_display_form(player, formname, fields)
         return
     end
 
-    if fields.AllowChanging ~= nil then
-    display.allow_changing = fields.AllowChanging
+    if fields.AllowChanging then
+    display.allow_changing = tostring(fields.AllowChanging) == "true"
     end
 
     if fields.Count then
