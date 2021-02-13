@@ -459,13 +459,14 @@ end
 minetest.register_craftitem(display_item_name,{
     description = "Display",
     inventory_image = "display_item.png",
-    on_use = function(itemstack, user, pointed_thing)
-        local pos = user:get_pos()
-        pos.y = pos.y + 1
-        minetest.add_entity(pos,  display_entity_name)
+    on_place = function(itemstack, user, pointed_thing)
+
+        if pointed_thing.type == "node" then
+        minetest.add_entity(pointed_thing.above,  display_entity_name)
         
         --Displays are not consumed as this is meant as a creative mode only tool
         --itemstack:take_item()
+        end
         return itemstack
     end
 })
