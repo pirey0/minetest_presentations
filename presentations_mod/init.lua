@@ -62,7 +62,9 @@ local DisplayEntity = {
     
     texture_names ={"default.jpg"},
     textures_index = 1,
-    textures_count = 1
+    textures_count = 1,
+
+    allow_changing = false
 }
 
 function DisplayEntity:change_textures_to(textures)
@@ -121,6 +123,7 @@ function DisplayEntity:on_activate(staticdata, dtime_s)
         self.texture_names = data.texture_names
         self.textures_index = data.textures_index
         self.textures_count = data.textures_count
+        self.allow_changing = data.allow_changing
 
         self:update_size()
         self:update_texture()
@@ -159,7 +162,8 @@ function  DisplayEntity:get_staticdata()
         size = self.size,
         texture_names = self.texture_names,
         textures_index = self.textures_index,
-        textures_count = self.textures_count
+        textures_count = self.textures_count,
+        allow_changing = self.allow_changing
     })
 end
 
@@ -187,16 +191,8 @@ end
 
 function DisplayEntity:on_punch(puncher, time_from_last_punch, tool_capabilities, dir, damage)
 
-    if player_lacks_privilage(puncher) then
-        msg_player(puncher, "You need the 'presentations' privilage to edit displays.")
-        return true
-    end
-
-    -- allow breaking while using strong tool
-    -- changed to 15 because Creative players automatically deal 10 damage.. TODO: Remove or rework
-    if damage >= 15 then
-        msg_player(puncher, "Display destroyed from excessive damage of " .. damage)
-        self:destroy_correctly()
+    if not self.allow_changing and player_lacks_privilage(puncher) then
+        msg_player(puncher, "Can only change this display with the 'presentations' privilage.")
         return true
     end
     
@@ -245,6 +241,8 @@ function DisplayEntity:show_formspec(clicker)
     "field[6,2.5;1,.5;R_CustomY;;".. self.proportions_y .. ";]"..
     "button[7,2.5; 2,0.5;R_SetToCustom;Apply Custom;]" ..
 
+    "checkbox[1,3.5;AllowChanging;Allow slide changes;".. tostring(self.allow_changing) .."]"..
+
     "label[1,4.5;URLs:]" ..
     "field[2,4.25;1,.5;Count;Count:;".. self.textures_count .. ";]" ..
     "button[5,4.25;2,.5;UpdateImages; Save URLs]"
@@ -269,6 +267,10 @@ function handle_display_form(player, formname, fields)
     if not display then
         msg_player(player, "Error: no display found with id " .. id)
         return
+    end
+
+    if fields.AllowChanging ~= nil then
+    display.allow_changing = fields.AllowChanging
     end
 
     if fields.Count then
