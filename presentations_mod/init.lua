@@ -56,7 +56,8 @@ local DisplayEntity = {
     },
 
     id = -1,
-    proportions = 1.0,
+    proportions_x = 1.0,
+    proportions_y = 1.0,
     size = 1.0,
     
     texture_names ={"default.jpg"},
@@ -70,8 +71,9 @@ function DisplayEntity:change_textures_to(textures)
     self:update_texture()
 end
 
-function DisplayEntity:set_proportions(new_proportions)
-    self.proportions = new_proportions
+function DisplayEntity:set_proportions(x,y)
+    self.proportions_x = x;
+    self.proportions_y = y;
     self:update_size()
 end
 
@@ -87,8 +89,8 @@ end
 
 function  DisplayEntity:update_size()
     
-    local size_x = self.size;
-    local size_y = self.size * self.proportions;
+    local size_x = self.size * (self.proportions_x / self.proportions_y);
+    local size_y = self.size;
     local half_x = size_x * 0.5
     local half_y = size_y * 0.5
 
@@ -113,7 +115,8 @@ function DisplayEntity:on_activate(staticdata, dtime_s)
         local data = minetest.parse_json(staticdata)
 
         self.id = data.id
-        self.proportions = data.proportions
+        self.proportions_x = data.proportions_x
+        self.proportions_y = data.proportions_y
         self.size = data.size
         self.texture_names = data.texture_names
         self.textures_index = data.textures_index
@@ -142,10 +145,17 @@ function DisplayEntity:destroy_correctly()
     self.object:remove()
 end
 
+function DisplayEntity:destroy_correctly_and_cleanup()
+    
+    --add cleanup
+    self:destroy_correctly()
+end
+
 function  DisplayEntity:get_staticdata()
     return minetest.write_json({
         id = self.id,
-        proportions = self.proportions,
+        proportions_x = self.proportions_x,
+        proportions_y = self.proportions_y,
         size = self.size,
         texture_names = self.texture_names,
         textures_index = self.textures_index,
@@ -211,26 +221,33 @@ function DisplayEntity:show_formspec(clicker)
     "formspec_version[4]" ..
     "size[10,".. height .."]" ..
     "achor[0,0]"..
-    "button_exit[1,0.25; 2,.5;Destroy;Destroy;]"  ..
-    "label[6,0.5; ID: ".. self.id ..";]" ..
-    "button[1,1; 2,.5;MoveUp;Up;]" ..
-    "button[3,1; 2,.5;MoveDown;Down;]" ..
-    "button[5,1; 2,.5;MoveRight;Right;]" ..
-    "button[7,1; 2,.5;MoveLeft;Left;]" ..
-    "button[1,2; 2,.5;MoveForward;Forward;]" ..
-    "button[3,2; 2,.5;MoveBackward;Backward;]" ..
-    "button[5,2; 2,.5;Rotate;Rotate;]" ..
-    
-    "button[1,3; 1,.5;ScalePlus;+;]" ..
-    "button[2,3; 1,.5;ScaleMinus;-;]"  ..
-    "button[4,3; 1,.5;R16_9;16:9;]"  ..
-    "button[5,3; 1,.5;R4_3;4:3;]"  ..
-    "button[6,3; 1,.5;R5_4;5:4;]"  ..
-    "button[7,3; 1,.5;R1_1;1:1;]"  ..
-    
+    "label[1,0.5; ID: ".. self.id ..";]" ..
+    "button_exit[5,0.25; 1.5,.5;Destroy;Destroy;]"  ..
+    "button_exit[6.5,0.25; 2.5,.5;DestroyAndCleanup;Destroy And Cleanup;]"  ..
+
+    "label[1,1.25; Move;]" ..
+    "button[1,1.5; 1,0.5;MoveRight;X+;]" ..
+    "button[2,1.5; 1,0.5;MoveUp;Y+;]" ..
+    "button[3,1.5; 1,0.5;MoveForward;Z+;]" ..
+    "button[1,2; 1,0.5;MoveLeft;X-;]" ..
+    "button[2,2; 1,0.5;MoveDown;Y-;]" ..
+    "button[3,2; 1,0.5;MoveBackward;Z-;]" ..
+    "button[1,2.5; 1,0.5;ScalePlus;Size+;]" ..
+    "button[2,2.5; 1,0.5;ScaleMinus;Size-;]"  ..
+    "button[3,2.5; 1,0.5;Rotate;Rotate;]" ..
+
+    "label[5,1.25; Proportions;]"..
+    "button[5,1.5; 1,.5;R1_1;1:1;]"  ..
+    "button[6,1.5; 1,.5;R16_9;16:9;]"  ..
+    "button[7,1.5; 1,.5;R4_3;4:3;]"  ..
+    "button[8,1.5; 1,.5;R5_4;5:4;]"  ..
+    "field[5,2.5;1,.5;R_CustomX;;".. self.proportions_x .. ";]"..
+    "field[6,2.5;1,.5;R_CustomY;;".. self.proportions_y .. ";]"..
+    "button[7,2.5; 2,0.5;R_SetToCustom;Apply Custom;]" ..
+
     "label[1,4.5;URLs:]" ..
     "field[2,4.25;1,.5;Count;Count:;".. self.textures_count .. ";]" ..
-    "button[4,4.25;2,.5;UpdateImages; Save URLs]"
+    "button[5,4.25;2,.5;UpdateImages; Save URLs]"
 
     local y = 5
     for i = 1, self.textures_count, 1 do
@@ -305,23 +322,35 @@ function handle_display_form(player, formname, fields)
     end
 
     if fields.R16_9 then
-        display:set_proportions(0.5625)
+        display:set_proportions(16,9)
     end
 
     if fields.R4_3 then
-        display:set_proportions(0.75)
+        display:set_proportions(4,3)
     end
 
     if fields.R5_4 then
-        display:set_proportions(0.8)
+        display:set_proportions(5,4)
     end
 
     if fields.R1_1 then
-        display:set_proportions(1.0)
+        display:set_proportions(1,1)
+    end
+
+    if fields.R_SetToCustom then
+        local X = tonumber(fields.R_CustomX)
+        local Y = tonumber(fields.R_CustomY)
+        if X and Y and Y ~= 0 and X ~= 0 then
+            display:set_proportions(X,Y)
+        end
     end
 
     if fields.Destroy then
         display:destroy_correctly()
+    end
+
+    if fields.DestroyAndCleanup then
+        display:destroy_correctly_and_cleanup()
     end
     
     if fields.UpdateImages then
