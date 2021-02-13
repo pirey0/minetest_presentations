@@ -17,6 +17,9 @@ display_max_textures = 30
 displays = {}
 nextDisplayIndex = 0
 insecure_environment = nil
+
+max_download_length = 2097152 --2MB Increase this to allow bigger images
+
 --#endregion GLOBAL VARIABLES
 
 function  print_warn(msg)
@@ -453,14 +456,37 @@ function download_and_save_texture(requester ,url, name)
             msg_player(requester, "[ERROR] Unable to make http request. (" .. modname .. " requires insecure environment permissions to download textures." )
             return false
         end
-
+        
         msg_player(requester, "HTTP Request: " .. url)
-		local method = "GET"
-		local resp   = {}
 
-		local client, code, headers, status = Http.request({url=url, sink=Ltn12.sink.table(resp), method=method })
+        --do a HEAD request first to check for and content-length
+        local client, code, headers = Http.request({url=url, method ="HEAD"})
+
+        if code ~= 200 then
+            msg_player(requester, "[ERROR] HTTP code " ..code)
+            return false
+        end
+
+        local size = tonumber(headers["content-length"]);
+
+        if not size then
+            msg_player(requester, "[ERROR] unable to get content-length")
+            return false
+        end
+
+        if size > max_download_length then
+            msg_player(requester, "[ERROR] filesize of " .. size .." bytes exceeds max size of " + max_download_length "bytes")
+            return false
+        end
+
+        --actual HTTP GET to download the content
+		local resp   = {}
+		local client, code, headers, status = Http.request({url=url, sink=Ltn12.sink.table(resp), method="GET" })
             
-        if code == 200 then
+        if code ~= 200 then
+            msg_player(requester, "[ERROR] HTTP code " ..code)
+            return false
+        end
             if resp then
                 local data = table.concat(resp);
                 if data then
@@ -477,15 +503,12 @@ function download_and_save_texture(requester ,url, name)
                         msg_player(requester, "Downloaded " .. name .. ". [WARNING] Failed to add dynamically (dynamic_add_media). This feature requires 5.3.0 or newer." ..
                         "The image should be available on server restart.") 
                     end
-
                     return true
                 end
             end
-        else
-            msg_player(requester, "ERROR: " ..code)
-        end
 
-        return false
+    msg_player(requester, "[ERROR] Unknown download error")
+    return false
 end
 
 
