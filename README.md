@@ -19,7 +19,7 @@ You can set it up and edit it by right clicking.
 This includes changing size, proportions, rotation, position and images to display.  
 You can change the current displayed image by punching the canvas (left click) OR by using a display remote (see below)  
 
-To add images you need to paste a link ending in .png or .jpg.   
+To add images you need to paste a link ending in .png or .jpg into the "URLS" input fields, multiple images can be downloaded at once.   
 The image will be downloaded once and will then be available with the specified name.  
 The image name becomes the last part of the url, so: "http://www.foo.com/bar.png" will be saved as "bar.png".  
 If an image with the same name already exist it will NOT be overritten! Only one image with the same name can exist at once.  
@@ -62,5 +62,5 @@ Add this line to your minetest.conf:
 `"secure.trusted_mods = presentations"`  
 
 
-Once ingame you will need the "presentations" privilage to edit/add displays.
-`/grant username presentations`  
+Once ingame you will need the "presentations" privilage to edit/add displays.  
+`/grant username presentations`    
