@@ -2,6 +2,8 @@
 
 modname = minetest.get_current_modname()
 modpath = minetest.get_modpath(modname)
+modstorage = minetest.get_mod_storage()
+
 path_to_textures = modpath .. DIR_DELIM .. "textures" .. DIR_DELIM
 
 display_formspec_name = modname .. ":display_formspec_"
@@ -21,6 +23,7 @@ insecure_environment = nil
 max_download_length = 2097152 --2MB Increase this to allow bigger images
 
 --#endregion GLOBAL VARIABLES
+
 
 function  print_warn(msg)
     print('\27[93m'..msg ..'\27[0m')
@@ -470,12 +473,31 @@ function download_and_save_texture(requester ,url, name)
             return false
         end
         
+        if starts_with(url, "https") then
+
+            msg_player(requester, "[ERROR] Https is not supported at the moment.")
+            return false
+        end
+
         msg_player(requester, "HTTP Request: " .. url)
 
         --do a HEAD request first to check for and content-length
         local client, code, headers = Http.request({url=url, method ="HEAD"})
 
         if code ~= 200 then
+
+            --handle permanent redirect
+            if code == 301 then
+                local location = headers["location"]
+                if location then
+                    msg_player(requester, "301 - Redirected to " .. location)
+                    return download_and_save_texture(requester, location, name)
+                else
+                    msg_player(requester, "[ERROR] 301 - Redirection failed ")
+                    return false
+                end
+            end
+
             msg_player(requester, "[ERROR] HTTP code " ..code)
             return false
         end
