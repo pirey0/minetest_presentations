@@ -11,6 +11,17 @@ To achieve this two items are added to the game:
 	 
 ---
 
+### Example 
+I made this mod to hold my Bachelor Thesis presentation during COVID times.  
+Here is what it looked like:  
+
+
+![Example Use1](https://user-images.githubusercontent.com/38705070/107877861-3caa2000-6ecf-11eb-997d-abee3c550fed.png)
+
+![Example Use2](https://user-images.githubusercontent.com/38705070/107877865-459af180-6ecf-11eb-9bbd-d4396549e7b5.png)
+
+---
+
 ### Display
 
 The display item is a canvas that display images (.png or .jpg).  
@@ -41,16 +52,6 @@ You can give a connected remote to a user without the "presentations" privilage 
 
 ---
 
-### Example 
-I made this mod to hold my Bachelor Thesis presentation during COVID times.  
-Here is what it looked like:  
-
-
-![Example Use1](https://user-images.githubusercontent.com/38705070/107877861-3caa2000-6ecf-11eb-997d-abee3c550fed.png)
-
-![Example Use2](https://user-images.githubusercontent.com/38705070/107877865-459af180-6ecf-11eb-9bbd-d4396549e7b5.png)
-
----
 
 ### Installation
 
