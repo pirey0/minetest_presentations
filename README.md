@@ -56,7 +56,7 @@ You can give a connected remote to a user without the "presentations" privilage 
 ### Installation
 
 To install it copy the downloaded folder (see releases) to the /mods/ folder of your server.  
-The mod uses [*luasocket*](http://w3.impa.br/~diego/software/luasocket/).  (Releases include a copy of it)  
+(The mod uses [*luasocket*](http://w3.impa.br/~diego/software/luasocket/). Releases include a copy of it. If installing from source, you will need to install it manually.) 
 
 To allow downloading images at runtime the mod needs to get added to the *trusted_mods* in the minetest.conf.  
 Add this line to your minetest.conf:  
