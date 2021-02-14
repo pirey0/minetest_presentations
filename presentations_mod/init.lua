@@ -4,6 +4,7 @@ modname = minetest.get_current_modname()
 modpath = minetest.get_modpath(modname)
 modstorage = minetest.get_mod_storage()
 
+
 path_to_textures = modpath .. DIR_DELIM .. "textures" .. DIR_DELIM
 
 display_formspec_name = modname .. ":display_formspec_"
@@ -34,12 +35,23 @@ if minetest.request_insecure_environment then
 	 if not insecure_environment then
         print_warn("[WARNING] Presentation requires an insecure environment to download textures. Add 'secure.trusted_mods = " .. modname .. "' to the minetest.conf to enable this feature.")
      else
-        --https://forum.minetest.net/viewtopic.php?t=20802
-        old_require = require	
-        require = insecure_environment.require		
+        --override package path to recoginze external folder
+        local old_path = insecure_environment.package.path
+        local old_cpath = insecure_environment.package.cpath
+        insecure_environment.package.path = insecure_environment.package.path.. ";" .. modpath .. "/external/?.lua"
+        insecure_environment.package.cpath = insecure_environment.package.cpath.. ";" .. modpath .. "/external/?.so"
+        --overriding require to insecure require to allow modules to load dependencies
+        local old_require = require
+        require = insecure_environment.require	
+
+        --load modules
         Http  = require("socket.http")
         Ltn12 = require("ltn12")
-        require = old_require 
+
+        --reset changes
+        require = old_require
+        insecure_environment.package.path = old_path
+        insecure_environment.package.cpath = old_cpath
      end
 end
 
