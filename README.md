@@ -4,24 +4,25 @@ It servers two main purpuses:
 1. Displaying images ingame, for the use in virtual exhibitions/galleries or simply for decoration.  
 2. Holding virtual presentations.  
 
-To achieve this he mod adds two items to the game: 
-(You can find both by typing "presentation" in the search bar)
+To achieve this he mod adds two items to the game:   
+(You can find both by typing "presentation" in the search bar)  
 1. The display item  
 2. The display remote item  
 	 
 
 ### DISPLAY:  
 Requires "presentations" privilage to be edited.  
-The display item is a canvas that display images (.png or .jpg). It can display a multitude of images if multiple are specified in the respective image list.  
+The display item is a canvas that display images (.png or .jpg).  
+It can display a multitude of images if multiple are specified in the respective image list.  
 You can set it up and edit it by right clicking.  
 This includes changing size, proportions, rotation, position and images to display.  
 You can change the current displayed image by punching the canvas (left click) OR by using a display remote (see below)  
 To add images you need to paste a link ending in .png or .jpg.   
-Adding images is ONLY available through http. So no uploading.  
-The image will be downloaded ONCE and then will be available with the specified name.  
-The image name becomes the last part of the url, so: "www.foo.com/bar.png" will be saved as "bar.png".  
-If an image with the same name already exist it will NOT be overritten! So be careful with the names of your images! Used images are right now also not removed!  
-A filesize limit of 2MB has been added to avoid the download of massive files.
+Adding images is ONLY available through http. So no uploading and as of right now no https.  
+The image will be downloaded once and will then be available with the specified name.  
+The image name becomes the last part of the url, so: "http://www.foo.com/bar.png" will be saved as "bar.png".  
+If an image with the same name already exist it will NOT be overritten! Only one image with the same name can exist at once.  
+A filesize limit of 2MB has been added to avoid the download of massive files.  
 
 
 
