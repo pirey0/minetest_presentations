@@ -249,34 +249,34 @@ function DisplayEntity:show_formspec(clicker)
     "formspec_version[4]" ..
     "size[10,".. height .."]" ..
     "achor[0,0]"..
-    "label[1,0.5; ID: ".. self.id ..";]" ..
-    "button_exit[5,0.25; 1.5,.5;Destroy;Destroy;]"  ..
-    "button_exit[6.5,0.25; 2.5,.5;DestroyAndCleanup;Destroy And Cleanup;]"  ..
+    "label[1,0.5; ID: ".. self.id .."]" ..
+    "button_exit[5,0.25; 1.5,.5;Destroy;Destroy]"  ..
+    "button_exit[6.5,0.25; 2.5,.5;DestroyAndCleanup;Destroy And Cleanup]"  ..
     "tooltip[DestroyAndCleanup; Destroys the display and deletes all the images downloaded through it;#000000;#ffffff]"..
-    "label[1,1.25; Move;]" ..
-    "button[1,1.5; 1,0.5;MoveRight;X+;]" ..
-    "button[2,1.5; 1,0.5;MoveUp;Y+;]" ..
-    "button[3,1.5; 1,0.5;MoveForward;Z+;]" ..
-    "button[1,2; 1,0.5;MoveLeft;X-;]" ..
-    "button[2,2; 1,0.5;MoveDown;Y-;]" ..
-    "button[3,2; 1,0.5;MoveBackward;Z-;]" ..
-    "button[1,2.5; 1,0.5;ScalePlus;Size+;]" ..
-    "button[2,2.5; 1,0.5;ScaleMinus;Size-;]"  ..
-    "button[3,2.5; 1,0.5;Rotate;Rotate;]" ..
+    "label[1,1.25; Move]" ..
+    "button[1,1.5; 1,0.5;MoveRight;X+]" ..
+    "button[2,1.5; 1,0.5;MoveUp;Y+]" ..
+    "button[3,1.5; 1,0.5;MoveForward;Z+]" ..
+    "button[1,2; 1,0.5;MoveLeft;X-]" ..
+    "button[2,2; 1,0.5;MoveDown;Y-]" ..
+    "button[3,2; 1,0.5;MoveBackward;Z-]" ..
+    "button[1,2.5; 1,0.5;ScalePlus;Size+]" ..
+    "button[2,2.5; 1,0.5;ScaleMinus;Size-]"  ..
+    "button[3,2.5; 1,0.5;Rotate;Rotate]" ..
 
-    "label[5,1.25; Proportions;]"..
-    "button[5,1.5; 1,.5;R1_1;1:1;]"  ..
-    "button[6,1.5; 1,.5;R16_9;16:9;]"  ..
-    "button[7,1.5; 1,.5;R4_3;4:3;]"  ..
-    "button[8,1.5; 1,.5;R5_4;5:4;]"  ..
-    "field[5,2.5;1,.5;R_CustomX;;".. self.proportions_x .. ";]"..
-    "field[6,2.5;1,.5;R_CustomY;;".. self.proportions_y .. ";]"..
-    "button[7,2.5; 2,0.5;R_SetToCustom;Apply Custom;]" ..
+    "label[5,1.25; Proportions]"..
+    "button[5,1.5; 1,.5;R1_1;1:1]"  ..
+    "button[6,1.5; 1,.5;R16_9;16:9]"  ..
+    "button[7,1.5; 1,.5;R4_3;4:3]"  ..
+    "button[8,1.5; 1,.5;R5_4;5:4]"  ..
+    "field[5,2.5;1,.5;R_CustomX;;".. self.proportions_x .. "]"..
+    "field[6,2.5;1,.5;R_CustomY;;".. self.proportions_y .. "]"..
+    "button[7,2.5; 2,0.5;R_SetToCustom;Apply Custom]" ..
 
     "checkbox[1,3.5;AllowChanging;Allow slide changes;".. tostring(self.allow_changing) .."]"..
 
     "label[1,4.5;URLs:]" ..
-    "field[2,4.25;1,.5;Count;Count:;".. self.textures_count .. ";]" ..
+    "field[2,4.25;1,.5;Count;Count:;".. self.textures_count .. "]" ..
     "button[5,4.25;2,.5;UpdateImages; Save URLs]"
 
     local y = 5
@@ -285,7 +285,7 @@ function DisplayEntity:show_formspec(clicker)
         if default == nil then
             default = ""
         end
-        testSpec = testSpec .."field[1,".. y ..";8,.5;URL".. i ..";;".. default ..";]" 
+        testSpec = testSpec .."field[1,".. y ..";8,.5;URL".. i ..";;".. default .."]" 
         y = y + 0.5
     end
 
@@ -616,7 +616,7 @@ function get_remote_formspec(id)
        formspec = "formspec_version[4]" ..
        "size[5,5]" ..
        "achor[0,0]" ..
-    "label[1,1; Bound to no display, leftclick on a display to connect;]" 
+    "label[1,1; Bound to no display, leftclick on a display to connect]" 
     else
         local display = displays[id]
         local sizeY = 5.5 + math.floor(display.textures_count/5) * 0.5
@@ -626,15 +626,15 @@ function get_remote_formspec(id)
         "achor[0,0]" ..
         "label[1,1; Bound to display #".. id.." ] " ..
         "label[1,2; Currently: " .. display.textures_index .. "/" .. display.textures_count .."]" ..
-        "button[1,3;1,1;Left;<-;]" ..
-        "button[3,3;1,1;Right;->;]"
+        "button[1,3;1,1;Left;<-]" ..
+        "button[3,3;1,1;Right;->]"
 
         for i = 1, display.textures_count, 1 do
             local igrid = i-1
             local x = (igrid % 5)
             local y = 4.5 + math.floor(igrid/5) * 0.5
             formspec = formspec ..
-            "button["..x .. "," .. y .. ";1,.5;goto_" .. i .. ";" .. i .. ";]"
+            "button["..x .. "," .. y .. ";1,.5;goto_" .. i .. ";" .. i .. "]"
         end
 
         --current slide, next / previous buttons
